@@ -1,21 +1,19 @@
-// ---------- пиксельные эффекты нажатия ----------
-document.addEventListener('click', event => {
-  const target = event.target.closest('button, .coin-card, .network-btn');
-  if (!target) return;
-  target.classList.remove('click-pop');
-  // Перезапуск CSS-анимации при каждом нажатии.
-  void target.offsetWidth;
-  target.classList.add('click-pop');
-  window.setTimeout(() => target.classList.remove('click-pop'), 460);
 
-  if (target.matches('button, .network-btn')) {
-    const rect = target.getBoundingClientRect();
-    const ripple = document.createElement('span');
-    ripple.className = 'pixel-ripple';
-    ripple.style.left = `${Math.max(0, Math.min(rect.width, event.clientX - rect.left))}px`;
-    ripple.style.top = `${Math.max(0, Math.min(rect.height, event.clientY - rect.top))}px`;
-    target.appendChild(ripple);
-    window.setTimeout(() => ripple.remove(), 650);
+// Пиксельная вспышка при нажатии на интерактивные элементы.
+document.addEventListener('click', event => {
+  const target = event.target.closest('button, .coin-card, [data-nav], .bubble-logo, .channel-btn');
+  if (!target || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const x = event.clientX;
+  const y = event.clientY;
+  for (let i = 0; i < 7; i++) {
+    const pixel = document.createElement('i');
+    pixel.className = 'click-pixel';
+    pixel.style.left = `${x}px`;
+    pixel.style.top = `${y}px`;
+    pixel.style.setProperty('--dx', `${Math.round((Math.random() - .5) * 90)}px`);
+    pixel.style.setProperty('--dy', `${Math.round((Math.random() - .5) * 90)}px`);
+    document.body.appendChild(pixel);
+    pixel.addEventListener('animationend', () => pixel.remove(), { once: true });
   }
 });
 
@@ -46,8 +44,11 @@ async function loadRates() {
     if ($('#homeTonRate')) $('#homeTonRate').textContent = ton;
     if ($('#rateMeta')) $('#rateMeta').textContent = `Источник: ${d.source}. Обновлено: ${new Date(d.updatedAt).toLocaleTimeString('ru-RU')}${d.stale ? ' · показан последний доступный курс' : ''}. Курс ориентировочный.`;
   } catch (e) {
-    document.querySelectorAll('.coin-rate').forEach(el => el.textContent = 'Курс временно недоступен');
-    if ($('#rateMeta')) $('#rateMeta').textContent = ''; // Не показываем техническую ошибку котировок в интерфейсе.
+    // Не показываем техническую ошибку в интерфейсе; оставляем нейтральный статус.
+    document.querySelectorAll('.coin-rate').forEach(el => {
+      if (!el.textContent || el.textContent.includes('загружается')) el.textContent = 'Рыночный сигнал обновляется…';
+    });
+    if ($('#rateMeta')) $('#rateMeta').textContent = '';
   }
 }
 loadRates();
