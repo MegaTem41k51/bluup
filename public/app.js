@@ -1,3 +1,24 @@
+// ---------- пиксельные эффекты нажатия ----------
+document.addEventListener('click', event => {
+  const target = event.target.closest('button, .coin-card, .network-btn');
+  if (!target) return;
+  target.classList.remove('click-pop');
+  // Перезапуск CSS-анимации при каждом нажатии.
+  void target.offsetWidth;
+  target.classList.add('click-pop');
+  window.setTimeout(() => target.classList.remove('click-pop'), 460);
+
+  if (target.matches('button, .network-btn')) {
+    const rect = target.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'pixel-ripple';
+    ripple.style.left = `${Math.max(0, Math.min(rect.width, event.clientX - rect.left))}px`;
+    ripple.style.top = `${Math.max(0, Math.min(rect.height, event.clientY - rect.top))}px`;
+    target.appendChild(ripple);
+    window.setTimeout(() => ripple.remove(), 650);
+  }
+});
+
 // ---------- утилиты ----------
 const $ = s => document.querySelector(s);
 const show = el => el.classList.remove('hidden');
@@ -26,7 +47,7 @@ async function loadRates() {
     if ($('#rateMeta')) $('#rateMeta').textContent = `Источник: ${d.source}. Обновлено: ${new Date(d.updatedAt).toLocaleTimeString('ru-RU')}${d.stale ? ' · показан последний доступный курс' : ''}. Курс ориентировочный.`;
   } catch (e) {
     document.querySelectorAll('.coin-rate').forEach(el => el.textContent = 'Курс временно недоступен');
-    if ($('#rateMeta')) $('#rateMeta').textContent = 'Не удалось загрузить котировки. Повторите попытку позже.';
+    if ($('#rateMeta')) $('#rateMeta').textContent = ''; // Не показываем техническую ошибку котировок в интерфейсе.
   }
 }
 loadRates();
